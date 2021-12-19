@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Write it on a postcard</title>
+    <style>
+      html {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        background-image: url("skybg.jpg");
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 600px;
+        overflow: hidden;
+      }
+      #card-container {
+        width: 50%;
+        position: relative;
+        /* transition: transform 0.25s ease-out; */
+      }
+      #postcard {
+        width: 100%;
+        height: auto;
+      }
+      #writespace {
+        position: absolute;
+        left: 2.5%;
+        top: 10%;
+        width: 55%;
+        height: 70%;
+        font-size: 16px;
+        padding: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="card-container">
+      <image src="postcard.svg" id="postcard" />
+      <p contenteditable id="writespace">Write...</p>
+    </div>
+    <script>
+      const card = document.querySelector("#card-container");
+      let cardAnimating = false;
+      let cardYDeg = 0;
+      let cardXDeg = 0;
+      let mouseXDeg = 0;
+      let mouseYDeg = 0;
+      function applyCardDeg() {
+        card.style.transform =
+          `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
+          `rotate3d(0, 1, 0, ${cardYDeg}deg)`;
+      }
+      function animateSpin() {
+        cardAnimating = true;
+        const animationLength = 2000; // milliseconds
+        let startTime = -1;
+        const initialYDeg = cardYDeg;
+        const step = (timestamp) => {
+          cardXDeg = mouseXDeg;
+          if (startTime == -1) {
+            startTime = timestamp;
+            requestAnimationFrame(step);
+          } else {
+            const timePassed = timestamp - startTime;
+            if (timePassed >= animationLength) {
+              cardYDeg = initialYDeg;
+              applyCardDeg();
+              cardAnimating = false;
+            } else {
+              const degrees = 360 * (timePassed / animationLength);
+              cardYDeg = initialYDeg + degrees;
+              applyCardDeg();
+              requestAnimationFrame(step);
+            }
+          }
+        };
+        requestAnimationFrame(step);
+      }
+      window.addEventListener("mousemove", (e) => {
+        const x = e.clientX / window.innerWidth - 0.5;
+        const y = e.clientY / window.innerHeight - 0.5;
+        mouseXDeg = -y * 40;
+        mouseYDeg = x * 40;
+        if (!cardAnimating) {
+          cardXDeg = mouseXDeg;
+          cardYDeg = mouseYDeg;
+          applyCardDeg();
+        }
+      });
+      document.querySelector("#postcard").addEventListener("click", (e) => {
+        e.preventDefault();
+        animateSpin();
+      });
+      document
+        .querySelector("#writespace")
+        .addEventListener("click", (e) => e.preventDefault());
+    </script>
+  </body>
+</html>
