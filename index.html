@@ -44,6 +44,12 @@
       }
       #card-back {
         backface-visibility: hidden;
+        width: 100%;
+        height: 0;
+        padding-bottom: 71%;
+        background-origin: border-box;
+        background-size: contain;
+        background-image: url("postcard.svg");
       }
       #image-info {
         position: absolute;
@@ -104,7 +110,6 @@
     <div id="card-container">
       <img id="card-front" />
       <div id="card-back">
-        <img src="postcard.svg" id="postcard" />
         <div id="image-info"><span id="fake-link">Reverse Side</span>: <span id="image-desc"></span></div>
         <textarea id="writespace" placeholder="Write a message..."></textarea>
       </div>
@@ -129,13 +134,18 @@
       let cardAnimating = false;
       let cardYDeg = 0;
       let cardXDeg = 0;
+      let cardXMove = 0;
+      let cardYMove = 0;
+      let cardZMove = 0;
       let ambientXDeg = 0;
       let ambientYDeg = 0;
-      function applyCardDeg() {
+      function applyCardTransforms() {
         card.style.transform =
+          `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px)` +
           `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
-          `rotate3d(0, 1, 0, ${cardYDeg}deg)`;
+          `rotate3d(0, 1, 0, ${cardYDeg}deg) `;
         cardFront.style.transform =
+        `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px)` +
           `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
           `rotate3d(0, 1, 0, ${cardYDeg + 180}deg)`;
       }
@@ -167,11 +177,11 @@
             }
             if (degrees - 360 >= ambientYDeg) {
               cardYDeg = ambientYDeg;
-              applyCardDeg();
+              applyCardTransforms();
               cardAnimating = false;
             } else {
               cardYDeg = degrees;
-              applyCardDeg();
+              applyCardTransforms();
               requestAnimationFrame(step);
             }
           }
@@ -180,12 +190,47 @@
       }
       function animateExit(){
         cardAnimating = true;
-        const backupTime = 2000;
+        const backupLength = 2000;
+        const backupSpin = new Track([
+          new Keyframe(0, ambientYDeg),
+          new Keyframe(backupLength, 900)
+        ]);
+        const backupCorrect = new Track([
+          new Keyframe(0, ambientXDeg),
+          new Keyframe(backupLength/2, 0)
+        ]);
+        const backup = new Track([
+          new Keyframe(0, 0),
+          new Keyframe(backupLength, -800)
+        ]);
+        const backupRise = new Track([
+          new Keyframe(0, 0),
+          new Keyframe(backupLength, -300)
+        ]);
         let startTime = -1;
-        const initialYDeg = ambientYDeg;
+        let cancelled = false;
+        window.addEventListener("keypress", (e)=>{
+          if (e.key == "x"){
+            cancelled = true;
+          }
+        })
         const step = (timestamp) => {
-
-        };
+          cardXDeg = ambientXDeg;
+          if (startTime == -1) {
+            startTime = timestamp;
+            requestAnimationFrame(step);
+          } else {
+            const timePassed = timestamp - startTime;
+            cardYDeg = backupSpin.getValue(timePassed);
+            cardXDeg = backupCorrect.getValue(timePassed);
+            cardZMove = backup.getValue(timePassed);
+            cardYMove = backupRise.getValue(timePassed);
+            applyCardTransforms();
+            if (timePassed <= backupLength && !cancelled){
+              requestAnimationFrame(step);
+            }
+          }
+        }
         requestAnimationFrame(step);
       }
       window.addEventListener("mousemove", (e) => {
@@ -196,7 +241,7 @@
         if (!cardAnimating) {
           cardXDeg = ambientXDeg;
           cardYDeg = ambientYDeg;
-          applyCardDeg();
+          applyCardTransforms();
         }
       });
       document.querySelector("#card-container").addEventListener("click", (e) => {
@@ -204,7 +249,7 @@
         animateSpin();
       });
       window.addEventListener("touchend", (e) => {
-        if (e.target.id != "writespace") {
+        if (e.target.id != "writespace" && e.target.id != "send-button") {
           // prevent mousemove from triggering
           e.stopPropagation();
           e.preventDefault();
@@ -243,7 +288,7 @@
             if (!cardAnimating){
               cardXDeg = ambientXDeg;
               cardYDeg = ambientYDeg;
-              applyCardDeg();
+              applyCardTransforms();
             }
           }
         },
@@ -253,7 +298,6 @@
         const writespace = document.querySelector("#writespace");
         const message = writespace.value;
         if (message.trim()){
-          writespace.value = "";
           fetch("/mail/box", {
             headers: {
               "Content-Type": "text/plain"
@@ -262,6 +306,7 @@
             body: message
           });
           writespace.blur();
+          animateExit();
         }
       })
     </script>
