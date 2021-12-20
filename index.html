@@ -87,6 +87,7 @@
         currentFrontImage %= frontImages.length;
       }
       setFrontImage();
+      const ambientTiltRange = 40;
       const card = document.querySelector("#card-back");
       const cardFront = document.querySelector("#card-front");
       let cardAnimating = false;
@@ -132,8 +133,8 @@
       window.addEventListener("mousemove", (e) => {
         const x = e.clientX / window.innerWidth - 0.5;
         const y = e.clientY / window.innerHeight - 0.5;
-        ambientXDeg = -y * 40;
-        ambientYDeg = x * 40;
+        ambientXDeg = -y * ambientTiltRange;
+        ambientYDeg = x * ambientTiltRange;
         if (!cardAnimating) {
           cardXDeg = ambientXDeg;
           cardYDeg = ambientYDeg;
@@ -164,6 +165,30 @@
           e.preventDefault();
           e.stopPropagation();
         });
+      let prevBeta = undefined;
+      let prevGamma = undefined;
+      console.log("adding deviceorientation listener");
+      window.addEventListener(
+        "deviceorientation",
+        (e) => {
+          console.log("device orientation listener fired");
+          if (prevBeta === undefined) {
+            prevBeta = e.beta;
+            prevGamma = e.gamma;
+          } else {
+            const deltaBeta = e.beta - prevBeta;
+            const deltaGamma = e.gamma - prevGamma;
+            ambientXDeg += deltaBeta;
+            ambientXDeg = Math.min(ambientTiltRange / 2, ambientXDeg);
+            ambientXDeg = Math.max(-ambientTiltRange / 2, ambientXDeg);
+            ambientYDeg = deltaGamma;
+            ambientYDeg = Math.min(ambientTiltRange / 2, ambientYDeg);
+            ambientYDeg = Math.max(-ambientTiltRange / 2, ambientYDeg);
+            applyCardDeg();
+          }
+        },
+        true
+      );
     </script>
   </body>
 </html>
