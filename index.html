@@ -99,6 +99,7 @@
     </div>
     <script type="module">
       import frontImages from "./covers/sources.js";
+      import spline from "./spline.js";
       document.querySelector("#writespace")?.focus();
       let currentFrontImage = 0;
       function setFrontImage() {
@@ -127,6 +128,7 @@
       }
       function animateSpin() {
         cardAnimating = true;
+        const defaultAnimationLength = 2000;
         let switchedImage = false;
         let startTime = -1;
         const initialYDeg = cardYDeg;
@@ -137,6 +139,7 @@
             requestAnimationFrame(step);
           } else {
             const timePassed = timestamp - startTime;
+            const degrees = spline(timePassed/2000)*360 + initialYDeg;
             if (degrees >= 270 && !switchedImage){
               setFrontImage();
               switchedImage = true;
