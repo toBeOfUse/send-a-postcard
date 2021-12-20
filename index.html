@@ -54,6 +54,14 @@
         padding: 3px;
         backface-visibility: hidden;
       }
+      @media (max-width: 500px) {
+        #writepace {
+          font-size: 10px;
+        }
+        #card-container {
+          width: 95%;
+        }
+      }
     </style>
   </head>
   <body>
@@ -136,9 +144,26 @@
         e.preventDefault();
         animateSpin();
       });
+      window.addEventListener("touchend", (e) => {
+        if (e.target.id != "writespace") {
+          // prevent mousemove from triggering
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        if (e.target.id == "postcard") {
+          animateSpin();
+        }
+      });
+      document.querySelector("#writespace").addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
       document
         .querySelector("#writespace")
-        .addEventListener("click", (e) => e.preventDefault());
+        .addEventListener("mousemove", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
     </script>
   </body>
 </html>
