@@ -82,7 +82,7 @@
       }
       function animateSpin() {
         cardAnimating = true;
-        const animationLength = 2000; // milliseconds
+        const degreesPerMS = 180 / 1000;
         let startTime = -1;
         const initialYDeg = cardYDeg;
         const step = (timestamp) => {
@@ -92,13 +92,13 @@
             requestAnimationFrame(step);
           } else {
             const timePassed = timestamp - startTime;
-            if (timePassed >= animationLength) {
-              cardYDeg = initialYDeg;
+            const degrees = degreesPerMS * timePassed + initialYDeg;
+            if (degrees - 360 >= ambientYDeg) {
+              cardYDeg = ambientYDeg;
               applyCardDeg();
               cardAnimating = false;
             } else {
-              const degrees = 360 * (timePassed / animationLength);
-              cardYDeg = initialYDeg + degrees;
+              cardYDeg = degrees;
               applyCardDeg();
               requestAnimationFrame(step);
             }
