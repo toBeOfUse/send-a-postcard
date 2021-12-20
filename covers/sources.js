@@ -1,7 +1,7 @@
 export default [
     {
         url: "https://commons.wikimedia.org/wiki/File:Harmandir_Sahib,_Amritsar,_India.jpg",
-        description: "Harmandir Sahib and its surrounding sacred pond (\"Amrit Sarovar\") are visible through fog on a cold winter morning.",
+        description: "Harmandir Sahib and its surrounding sacred pond, Amrit Sarovar, are visible through fog on a cold winter morning.",
         filename: "Harmandir_Sahib,_Amritsar,_India.jpg"
     },
     {
