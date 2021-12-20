@@ -73,6 +73,7 @@
       </div>
     </div>
     <script>
+      document.querySelector("#writespace")?.focus();
       const frontImages = [
         "Vista_de_Ålesund_desde_Aksla,_Noruega,_2019-09-01,_DD_16.jpg",
         "Senden,_Schloss_Senden_--_2020_--_0486-90.jpg",
@@ -167,24 +168,28 @@
         });
       let prevBeta = undefined;
       let prevGamma = undefined;
-      console.log("adding deviceorientation listener");
       window.addEventListener(
         "deviceorientation",
         (e) => {
-          console.log("device orientation listener fired");
           if (prevBeta === undefined) {
             prevBeta = e.beta;
             prevGamma = e.gamma;
           } else {
-            const deltaBeta = e.beta - prevBeta;
-            const deltaGamma = e.gamma - prevGamma;
+            const deltaBeta = (e.beta - prevBeta)/2;
+            const deltaGamma = (e.gamma - prevGamma);
             ambientXDeg += deltaBeta;
             ambientXDeg = Math.min(ambientTiltRange / 2, ambientXDeg);
             ambientXDeg = Math.max(-ambientTiltRange / 2, ambientXDeg);
-            ambientYDeg = deltaGamma;
+            ambientYDeg += deltaGamma;
             ambientYDeg = Math.min(ambientTiltRange / 2, ambientYDeg);
             ambientYDeg = Math.max(-ambientTiltRange / 2, ambientYDeg);
-            applyCardDeg();
+            prevBeta = e.beta;
+            prevGamma = e.gamma;
+            if (!cardAnimating){
+              cardXDeg = ambientXDeg;
+              cardYDeg = ambientYDeg;
+              applyCardDeg();
+            }
           }
         },
         true
