@@ -73,8 +73,16 @@
         resize: none;
         border: none;
       }
+      #send-button {
+        position: fixed;
+        right: 30px;
+        bottom: 30px;
+        font-size: 1.5em;
+        font-family: serif;
+        border-radius: 5px;
+      }
       @media (max-width: 500px) {
-        #writepace {
+        #writespace {
           font-size: 8px;
         }
         #image-info {
@@ -97,6 +105,7 @@
         <textarea id="writespace" placeholder="Write a message..."></textarea>
       </div>
     </div>
+    <button id="send-button">Send</button>
     <script type="module">
       import frontImages from "./covers/sources.js";
       import spline from "./spline.js";
@@ -220,6 +229,20 @@
         },
         true
       );
+      document.querySelector("#send-button").addEventListener("click", (e)=>{
+        const writespace = document.querySelector("#writespace");
+        const message = writespace.value;
+        if (message.trim()){
+          writespace.value = "";
+          fetch("/mail/box", {
+            headers: {
+              "Content-Type": "text/plain"
+            },
+            method: "POST",
+            body: message
+          });
+        }
+      })
     </script>
   </body>
 </html>
