@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="stampicon.png" type="image/png">
     <title>Write it on a postcard</title>
     <style>
       html {
@@ -44,50 +45,85 @@
       #card-back {
         backface-visibility: hidden;
       }
+      #image-info {
+        position: absolute;
+        left: 5%;
+        top: 5%;
+        height: 10%;
+        width: 50%;
+        padding: 3px;
+        backface-visibility: hidden;
+        font-family: serif;
+        font-size: 12px;
+      }
+      #fake-link {
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+      }
       #writespace {
         position: absolute;
-        left: 2.5%;
-        top: 10%;
-        width: 55%;
-        height: 70%;
+        left: 5%;
+        top: 20%;
+        width: 50%;
+        height: 60%;
         font-size: 16px;
         padding: 3px;
         backface-visibility: hidden;
+        font-family: serif;
+        resize: none;
+        border: none;
+      }
+      #send-button {
+        position: fixed;
+        right: 30px;
+        bottom: 30px;
+        font-size: 1.5em;
+        font-family: sans-serif;
+        border-radius: 5px;
       }
       @media (max-width: 500px) {
-        #writepace {
-          font-size: 10px;
+        #writespace {
+          font-size: 8px;
         }
+        #image-info {
+          font-size: 6px;
+        }
+        #send-button {
+          font-size: 1em;
+        }
+      }
+      @media (max-aspect-ratio: 1/1) {
         #card-container {
-          width: 95%;
+          width: 90%;
         }
       }
     </style>
   </head>
   <body>
     <div id="card-container">
-      <img src="covers/Harmandir_Sahib,_Amritsar,_India.jpg" id="card-front" />
+      <img id="card-front" />
       <div id="card-back">
         <img src="postcard.svg" id="postcard" />
-        <p contenteditable id="writespace">Write...</p>
+        <div id="image-info"><span id="fake-link">Reverse Side</span>: <span id="image-desc"></span></div>
+        <textarea id="writespace" placeholder="Write a message..."></textarea>
       </div>
     </div>
-    <script>
-      const frontImages = [
-        "Vista_de_Ålesund_desde_Aksla,_Noruega,_2019-09-01,_DD_16.jpg",
-        "Senden,_Schloss_Senden_--_2020_--_0486-90.jpg",
-        "Duisburg,_Landschaftspark_Duisburg-Nord_--_2020_--_7772.jpg",
-        "Harmandir_Sahib,_Amritsar,_India.jpg",
-      ];
+    <button id="send-button">Send ➤</button>
+    <script type="module">
+      import frontImages from "./covers/sources.js";
+      import spline from "./spline.js";
+      document.querySelector("#writespace")?.focus();
       let currentFrontImage = 0;
       function setFrontImage() {
-        const file = frontImages[currentFrontImage];
-        document.querySelector("#card-front").src = "covers/" + file;
+        const image = frontImages[currentFrontImage];
+        document.querySelector("#card-front").src = "covers/" + image.filename;
+        document.querySelector("#image-desc").innerHTML = image.description;
         currentFrontImage += 1;
         currentFrontImage %= frontImages.length;
       }
       setFrontImage();
-      const ambientTiltRange = 40;
+      const ambientTiltRange = 30;
       const card = document.querySelector("#card-back");
       const cardFront = document.querySelector("#card-front");
       let cardAnimating = false;
@@ -105,7 +141,8 @@
       }
       function animateSpin() {
         cardAnimating = true;
-        const degreesPerMS = 180 / 1000;
+        const defaultAnimationLength = 2000;
+        let switchedImage = false;
         let startTime = -1;
         const initialYDeg = cardYDeg;
         const step = (timestamp) => {
@@ -115,11 +152,14 @@
             requestAnimationFrame(step);
           } else {
             const timePassed = timestamp - startTime;
-            const degrees = degreesPerMS * timePassed + initialYDeg;
+            const degrees = spline(timePassed/2000)*360 + initialYDeg;
+            if (degrees >= 270 && !switchedImage){
+              setFrontImage();
+              switchedImage = true;
+            }
             if (degrees - 360 >= ambientYDeg) {
               cardYDeg = ambientYDeg;
               applyCardDeg();
-              setFrontImage();
               cardAnimating = false;
             } else {
               cardYDeg = degrees;
@@ -127,6 +167,16 @@
               requestAnimationFrame(step);
             }
           }
+        };
+        requestAnimationFrame(step);
+      }
+      function animateExit(){
+        cardAnimating = true;
+        const backupTime = 2000;
+        let startTime = -1;
+        const initialYDeg = ambientYDeg;
+        const step = (timestamp) => {
+
         };
         requestAnimationFrame(step);
       }
@@ -141,7 +191,7 @@
           applyCardDeg();
         }
       });
-      document.querySelector("#postcard").addEventListener("click", (e) => {
+      document.querySelector("#card-container").addEventListener("click", (e) => {
         e.preventDefault();
         animateSpin();
       });
@@ -161,34 +211,53 @@
       });
       document
         .querySelector("#writespace")
-        .addEventListener("mousemove", (e) => {
+        .addEventListener("touchend", (e) => {
           e.preventDefault();
           e.stopPropagation();
         });
       let prevBeta = undefined;
       let prevGamma = undefined;
-      console.log("adding deviceorientation listener");
       window.addEventListener(
         "deviceorientation",
         (e) => {
-          console.log("device orientation listener fired");
           if (prevBeta === undefined) {
             prevBeta = e.beta;
             prevGamma = e.gamma;
           } else {
-            const deltaBeta = e.beta - prevBeta;
-            const deltaGamma = e.gamma - prevGamma;
+            const deltaBeta = (e.beta - prevBeta)/2;
+            const deltaGamma = (e.gamma - prevGamma);
             ambientXDeg += deltaBeta;
             ambientXDeg = Math.min(ambientTiltRange / 2, ambientXDeg);
             ambientXDeg = Math.max(-ambientTiltRange / 2, ambientXDeg);
-            ambientYDeg = deltaGamma;
+            ambientYDeg -= deltaGamma;
             ambientYDeg = Math.min(ambientTiltRange / 2, ambientYDeg);
             ambientYDeg = Math.max(-ambientTiltRange / 2, ambientYDeg);
-            applyCardDeg();
+            prevBeta = e.beta;
+            prevGamma = e.gamma;
+            if (!cardAnimating){
+              cardXDeg = ambientXDeg;
+              cardYDeg = ambientYDeg;
+              applyCardDeg();
+            }
           }
         },
         true
       );
+      document.querySelector("#send-button").addEventListener("click", (e)=>{
+        const writespace = document.querySelector("#writespace");
+        const message = writespace.value;
+        if (message.trim()){
+          writespace.value = "";
+          fetch("/mail/box", {
+            headers: {
+              "Content-Type": "text/plain"
+            },
+            method: "POST",
+            body: message
+          });
+          writespace.blur()
+        }
+      })
     </script>
   </body>
 </html>
