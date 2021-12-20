@@ -21,17 +21,28 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        perspective: 600px;
         overflow: hidden;
       }
       #card-container {
         width: 50%;
         position: relative;
-        /* transition: transform 0.25s ease-out; */
+        perspective: 600px;
       }
       #postcard {
         width: 100%;
         height: auto;
+        backface-visibility: hidden;
+      }
+      #card-front {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        transform: rotateY(180deg);
+        backface-visibility: hidden;
+      }
+      #card-back {
+        backface-visibility: hidden;
       }
       #writespace {
         position: absolute;
@@ -41,25 +52,33 @@
         height: 70%;
         font-size: 16px;
         padding: 3px;
+        backface-visibility: hidden;
       }
     </style>
   </head>
   <body>
     <div id="card-container">
-      <image src="postcard.svg" id="postcard" />
-      <p contenteditable id="writespace">Write...</p>
+      <img src="covers/Harmandir_Sahib,_Amritsar,_India.jpg" id="card-front" />
+      <div id="card-back">
+        <img src="postcard.svg" id="postcard" />
+        <p contenteditable id="writespace">Write...</p>
+      </div>
     </div>
     <script>
-      const card = document.querySelector("#card-container");
+      const card = document.querySelector("#card-back");
+      const cardFront = document.querySelector("#card-front");
       let cardAnimating = false;
       let cardYDeg = 0;
       let cardXDeg = 0;
-      let mouseXDeg = 0;
-      let mouseYDeg = 0;
+      let ambientXDeg = 0;
+      let ambientYDeg = 0;
       function applyCardDeg() {
         card.style.transform =
           `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
           `rotate3d(0, 1, 0, ${cardYDeg}deg)`;
+        cardFront.style.transform =
+          `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
+          `rotate3d(0, 1, 0, ${cardYDeg + 180}deg)`;
       }
       function animateSpin() {
         cardAnimating = true;
@@ -67,7 +86,7 @@
         let startTime = -1;
         const initialYDeg = cardYDeg;
         const step = (timestamp) => {
-          cardXDeg = mouseXDeg;
+          cardXDeg = ambientXDeg;
           if (startTime == -1) {
             startTime = timestamp;
             requestAnimationFrame(step);
@@ -90,11 +109,11 @@
       window.addEventListener("mousemove", (e) => {
         const x = e.clientX / window.innerWidth - 0.5;
         const y = e.clientY / window.innerHeight - 0.5;
-        mouseXDeg = -y * 40;
-        mouseYDeg = x * 40;
+        ambientXDeg = -y * 40;
+        ambientYDeg = x * 40;
         if (!cardAnimating) {
-          cardXDeg = mouseXDeg;
-          cardYDeg = mouseYDeg;
+          cardXDeg = ambientXDeg;
+          cardYDeg = ambientYDeg;
           applyCardDeg();
         }
       });
