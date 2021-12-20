@@ -46,13 +46,16 @@
       }
       #writespace {
         position: absolute;
-        left: 2.5%;
-        top: 10%;
-        width: 55%;
-        height: 70%;
+        left: 5%;
+        top: 17%;
+        width: 50%;
+        height: 65%;
         font-size: 16px;
         padding: 3px;
         backface-visibility: hidden;
+        font-family: serif;
+        resize: none;
+        border: none;
       }
       @media (max-width: 500px) {
         #writepace {
@@ -66,10 +69,10 @@
   </head>
   <body>
     <div id="card-container">
-      <img src="covers/Harmandir_Sahib,_Amritsar,_India.jpg" id="card-front" />
+      <img id="card-front" />
       <div id="card-back">
         <img src="postcard.svg" id="postcard" />
-        <p contenteditable id="writespace">Write...</p>
+        <textarea id="writespace" placeholder="Write a message..."></textarea>
       </div>
     </div>
     <script>
@@ -88,7 +91,7 @@
         currentFrontImage %= frontImages.length;
       }
       setFrontImage();
-      const ambientTiltRange = 40;
+      const ambientTiltRange = 30;
       const card = document.querySelector("#card-back");
       const cardFront = document.querySelector("#card-front");
       let cardAnimating = false;
@@ -162,7 +165,7 @@
       });
       document
         .querySelector("#writespace")
-        .addEventListener("mousemove", (e) => {
+        .addEventListener("touchend", (e) => {
           e.preventDefault();
           e.stopPropagation();
         });
