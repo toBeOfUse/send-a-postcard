@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="stampicon.png" type="image/png">
     <title>Write it on a postcard</title>
     <style>
       html {
@@ -63,9 +64,9 @@
       #writespace {
         position: absolute;
         left: 5%;
-        top: 17%;
+        top: 20%;
         width: 50%;
-        height: 65%;
+        height: 60%;
         font-size: 16px;
         padding: 3px;
         backface-visibility: hidden;
@@ -87,6 +88,9 @@
         }
         #image-info {
           font-size: 6px;
+        }
+        #send-button {
+          font-size: 1em;
         }
       }
       @media (max-aspect-ratio: 1/1) {
@@ -166,6 +170,16 @@
         };
         requestAnimationFrame(step);
       }
+      function animateExit(){
+        cardAnimating = true;
+        const backupTime = 2000;
+        let startTime = -1;
+        const initialYDeg = ambientYDeg;
+        const step = (timestamp) => {
+
+        };
+        requestAnimationFrame(step);
+      }
       window.addEventListener("mousemove", (e) => {
         const x = e.clientX / window.innerWidth - 0.5;
         const y = e.clientY / window.innerHeight - 0.5;
@@ -215,7 +229,7 @@
             ambientXDeg += deltaBeta;
             ambientXDeg = Math.min(ambientTiltRange / 2, ambientXDeg);
             ambientXDeg = Math.max(-ambientTiltRange / 2, ambientXDeg);
-            ambientYDeg += deltaGamma;
+            ambientYDeg -= deltaGamma;
             ambientYDeg = Math.min(ambientTiltRange / 2, ambientYDeg);
             ambientYDeg = Math.max(-ambientTiltRange / 2, ambientYDeg);
             prevBeta = e.beta;
@@ -241,6 +255,7 @@
             method: "POST",
             body: message
           });
+          writespace.blur()
         }
       })
     </script>
