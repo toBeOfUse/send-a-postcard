@@ -12,11 +12,10 @@ http.createServer((req, res)=>{
         const timestamp = new Date().toLocaleString();
         fs.appendFileSync("inbox.txt", "Receiving message at "+timestamp+":\n");
         req.on("data", (c)=>{
-            console.log("received", c);
             body += c;
         });
         req.on("end", () => {
-            fs.appendFile("inbox.txt", body+"\n---\n",
+            fs.appendFile("inbox.txt", body+"\n\n---\n\n",
             function (err) {
                 if (err) throw err;
                 console.log('appended message to inbox.txt');
