@@ -112,7 +112,7 @@
     <button id="send-button">Send ➤</button>
     <script type="module">
       import frontImages from "./covers/sources.js";
-      import spline from "./spline.js";
+      import {Keyframe, Track} from "./spline.js";
       document.querySelector("#writespace")?.focus();
       let currentFrontImage = 0;
       function setFrontImage() {
@@ -142,9 +142,17 @@
       function animateSpin() {
         cardAnimating = true;
         const defaultAnimationLength = 2000;
+        const animationSpline = [[0,0], [0.15, 0.8], [0.8, 0.15], [1,1]];
+        const initialYDeg = cardYDeg;
+        const track = new Track([
+          new Keyframe(0, initialYDeg),
+          new Keyframe(
+            defaultAnimationLength,
+            initialYDeg+360+ambientTiltRange/2,
+            animationSpline
+        )]);
         let switchedImage = false;
         let startTime = -1;
-        const initialYDeg = cardYDeg;
         const step = (timestamp) => {
           cardXDeg = ambientXDeg;
           if (startTime == -1) {
@@ -152,7 +160,7 @@
             requestAnimationFrame(step);
           } else {
             const timePassed = timestamp - startTime;
-            const degrees = spline(timePassed/2000)*360 + initialYDeg;
+            const degrees = track.getValue(timePassed);
             if (degrees >= 270 && !switchedImage){
               setFrontImage();
               switchedImage = true;
@@ -200,8 +208,6 @@
           // prevent mousemove from triggering
           e.stopPropagation();
           e.preventDefault();
-        }
-        if (e.target.id == "postcard") {
           animateSpin();
         }
       });
@@ -255,7 +261,7 @@
             method: "POST",
             body: message
           });
-          writespace.blur()
+          writespace.blur();
         }
       })
     </script>
