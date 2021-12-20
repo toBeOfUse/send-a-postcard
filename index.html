@@ -44,6 +44,22 @@
       #card-back {
         backface-visibility: hidden;
       }
+      #image-info {
+        position: absolute;
+        left: 5%;
+        top: 5%;
+        height: 10%;
+        width: 50%;
+        padding: 3px;
+        backface-visibility: hidden;
+        font-family: serif;
+        font-size: 12px;
+      }
+      #fake-link {
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+      }
       #writespace {
         position: absolute;
         left: 5%;
@@ -59,10 +75,15 @@
       }
       @media (max-width: 500px) {
         #writepace {
-          font-size: 10px;
+          font-size: 8px;
         }
+        #image-info {
+          font-size: 6px;
+        }
+      }
+      @media (max-aspect-ratio: 1/1) {
         #card-container {
-          width: 95%;
+          width: 90%;
         }
       }
     </style>
@@ -72,21 +93,18 @@
       <img id="card-front" />
       <div id="card-back">
         <img src="postcard.svg" id="postcard" />
+        <div id="image-info"><span id="fake-link">Reverse Side</span>: <span id="image-desc"></span></div>
         <textarea id="writespace" placeholder="Write a message..."></textarea>
       </div>
     </div>
-    <script>
+    <script type="module">
+      import frontImages from "./covers/sources.js";
       document.querySelector("#writespace")?.focus();
-      const frontImages = [
-        "Vista_de_Ålesund_desde_Aksla,_Noruega,_2019-09-01,_DD_16.jpg",
-        "Senden,_Schloss_Senden_--_2020_--_0486-90.jpg",
-        "Duisburg,_Landschaftspark_Duisburg-Nord_--_2020_--_7772.jpg",
-        "Harmandir_Sahib,_Amritsar,_India.jpg",
-      ];
       let currentFrontImage = 0;
       function setFrontImage() {
-        const file = frontImages[currentFrontImage];
-        document.querySelector("#card-front").src = "covers/" + file;
+        const image = frontImages[currentFrontImage];
+        document.querySelector("#card-front").src = "covers/" + image.filename;
+        document.querySelector("#image-desc").innerHTML = image.description;
         currentFrontImage += 1;
         currentFrontImage %= frontImages.length;
       }
@@ -109,7 +127,7 @@
       }
       function animateSpin() {
         cardAnimating = true;
-        const degreesPerMS = 180 / 1000;
+        let switchedImage = false;
         let startTime = -1;
         const initialYDeg = cardYDeg;
         const step = (timestamp) => {
@@ -119,11 +137,13 @@
             requestAnimationFrame(step);
           } else {
             const timePassed = timestamp - startTime;
-            const degrees = degreesPerMS * timePassed + initialYDeg;
+            if (degrees >= 270 && !switchedImage){
+              setFrontImage();
+              switchedImage = true;
+            }
             if (degrees - 360 >= ambientYDeg) {
               cardYDeg = ambientYDeg;
               applyCardDeg();
-              setFrontImage();
               cardAnimating = false;
             } else {
               cardYDeg = degrees;
@@ -145,7 +165,7 @@
           applyCardDeg();
         }
       });
-      document.querySelector("#postcard").addEventListener("click", (e) => {
+      document.querySelector("#card-container").addEventListener("click", (e) => {
         e.preventDefault();
         animateSpin();
       });
