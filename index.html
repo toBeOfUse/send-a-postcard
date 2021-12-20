@@ -65,6 +65,20 @@
       </div>
     </div>
     <script>
+      const frontImages = [
+        "Vista_de_Ålesund_desde_Aksla,_Noruega,_2019-09-01,_DD_16.jpg",
+        "Senden,_Schloss_Senden_--_2020_--_0486-90.jpg",
+        "Duisburg,_Landschaftspark_Duisburg-Nord_--_2020_--_7772.jpg",
+        "Harmandir_Sahib,_Amritsar,_India.jpg",
+      ];
+      let currentFrontImage = 0;
+      function setFrontImage() {
+        const file = frontImages[currentFrontImage];
+        document.querySelector("#card-front").src = "covers/" + file;
+        currentFrontImage += 1;
+        currentFrontImage %= frontImages.length;
+      }
+      setFrontImage();
       const card = document.querySelector("#card-back");
       const cardFront = document.querySelector("#card-front");
       let cardAnimating = false;
@@ -96,6 +110,7 @@
             if (degrees - 360 >= ambientYDeg) {
               cardYDeg = ambientYDeg;
               applyCardDeg();
+              setFrontImage();
               cardAnimating = false;
             } else {
               cardYDeg = degrees;
