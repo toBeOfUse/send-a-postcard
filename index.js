@@ -35,6 +35,9 @@ function applyCardTransforms(extras) {
         `rotate3d(0, 1, 0, ${cardYDeg + 180}deg)`;
 }
 function animateSpin() {
+    if (cardAnimating) {
+        return;
+    }
     cardAnimating = true;
     const defaultAnimationLength = 2000;
     const animationSpline = [[0, 0], [0.15, 0.8], [0.8, 0.15], [1, 1]];
@@ -69,6 +72,9 @@ function animateSpin() {
     requestAnimationFrame(step);
 }
 function animateExit() {
+    if (cardAnimating) {
+        return;
+    }
     cardAnimating = true;
     sendable = false;
     const backupLength = 2000;
@@ -148,6 +154,7 @@ function animateReappear() {
             const timePassed = timestamp - startTime;
             if (timePassed > pause + reappearLength) {
                 sendable = true;
+                cardYMove = 0;
                 return;
             }
             cardYMove = reappear.getValue(timePassed);
@@ -173,10 +180,13 @@ document.querySelector("#card-container").addEventListener("click", (e) => {
     animateSpin();
 });
 window.addEventListener("touchend", (e) => {
-    if (e.target.id != "writespace" && e.target.id != "send-button") {
-        // prevent mousemove from triggering
-        e.stopPropagation();
-        e.preventDefault();
+    // prevent mousemove from triggering and causing awkward jerky rotation
+    e.stopPropagation();
+    e.preventDefault();
+    if (e.target.id != "writespace" &&
+        e.target.id != "send-button"
+        && e.target.parentElement.id != "send-button"
+    ) {
         animateSpin();
     }
 });
@@ -187,8 +197,9 @@ document.querySelector("#writespace").addEventListener("click", (e) => {
 document
     .querySelector("#writespace")
     .addEventListener("touchend", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+        // need to do this since default is prevented in the event listener for
+        // window
+        e.target.focus();
     });
 let prevBeta = undefined;
 let prevGamma = undefined;
@@ -218,7 +229,7 @@ window.addEventListener(
     },
     true
 );
-document.querySelector("#send-button").addEventListener("click", (e) => {
+const send = () => {
     if (!sendable) {
         return;
     }
@@ -235,4 +246,7 @@ document.querySelector("#send-button").addEventListener("click", (e) => {
         writespace.blur();
         animateExit();
     }
-});
+};
+const sendButton = document.querySelector("#send-button");
+sendButton.addEventListener("click", send);
+sendButton.addEventListener("touchend", send);
