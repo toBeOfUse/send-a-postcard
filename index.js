@@ -21,12 +21,15 @@ let cardYMove = 0;
 let cardZMove = 0;
 let ambientXDeg = 0;
 let ambientYDeg = 0;
-function applyCardTransforms() {
+let sendable = true;
+function applyCardTransforms(extras) {
     card.style.transform =
+        (extras || "") +
         `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px)` +
         `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
         `rotate3d(0, 1, 0, ${cardYDeg}deg) `;
     cardFront.style.transform =
+        (extras || "") +
         `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px)` +
         `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
         `rotate3d(0, 1, 0, ${cardYDeg + 180}deg)`;
@@ -43,7 +46,6 @@ function animateSpin() {
             initialYDeg + 360 + ambientTiltRange / 2,
             animationSpline
         )]);
-    let switchedImage = false;
     let startTime = -1;
     const step = (timestamp) => {
         cardXDeg = ambientXDeg;
@@ -53,10 +55,6 @@ function animateSpin() {
         } else {
             const timePassed = timestamp - startTime;
             const degrees = track.getValue(timePassed);
-            if (degrees >= 270 && !switchedImage) {
-                setFrontImage();
-                switchedImage = true;
-            }
             if (degrees - 360 >= ambientYDeg) {
                 cardYDeg = ambientYDeg;
                 applyCardTransforms();
@@ -72,16 +70,20 @@ function animateSpin() {
 }
 function animateExit() {
     cardAnimating = true;
+    sendable = false;
     const backupLength = 2000;
+    const loopLength = 1000;
+    const leaveLength = 1000;
+    const totalLength = backupLength + loopLength + leaveLength;
     const backupSpin = new Track([
         new Keyframe(0, ambientYDeg),
         new Keyframe(backupLength - 200, 900)
     ]);
-    const backupCorrect = new Track([
+    const backupFlip = new Track([
         new Keyframe(0, ambientXDeg),
         new Keyframe(backupLength / 2, 0),
         new Keyframe(backupLength - 200, 0),
-        new Keyframe(backupLength, -90)
+        new Keyframe(backupLength, 90)
     ]);
     const backup = new Track([
         new Keyframe(0, 0),
@@ -91,13 +93,15 @@ function animateExit() {
         new Keyframe(0, 0),
         new Keyframe(backupLength, -1000)
     ]);
+    const loop = new Track([
+        new Keyframe(backupLength, 0),
+        new Keyframe(backupLength + loopLength, 360)
+    ]);
+    const leave = new Track([
+        new Keyframe(backupLength + loopLength, 0),
+        new Keyframe(totalLength, 5000)
+    ]);
     let startTime = -1;
-    let cancelled = false;
-    window.addEventListener("keypress", (e) => {
-        if (e.key == "x") {
-            cancelled = true;
-        }
-    });
     const step = (timestamp) => {
         cardXDeg = ambientXDeg;
         if (startTime == -1) {
@@ -105,16 +109,52 @@ function animateExit() {
             requestAnimationFrame(step);
         } else {
             const timePassed = timestamp - startTime;
-            cardYDeg = backupSpin.getValue(timePassed);
-            cardXDeg = backupCorrect.getValue(timePassed);
-            cardZMove = backup.getValue(timePassed);
-            cardYMove = backupRise.getValue(timePassed);
-            applyCardTransforms();
-            if (timePassed <= backupLength && !cancelled) {
+            if (timePassed <= totalLength) {
+                cardYDeg = backupSpin.getValue(timePassed);
+                cardXDeg = backupFlip.getValue(timePassed);
+                cardZMove = backup.getValue(timePassed);
+                cardYMove = backupRise.getValue(timePassed);
+                cardXMove = leave.getValue(timePassed);
+                const cardZDeg = loop.getValue(timePassed);
+                applyCardTransforms(`rotate3d(0,0,1,${cardZDeg}deg) `);
                 requestAnimationFrame(step);
+            } else {
+                animateReappear();
             }
         }
     };
+    requestAnimationFrame(step);
+}
+function animateReappear() {
+    document.querySelector("#writespace").value = "";
+    setFrontImage();
+    const pause = 1000;
+    const reappearLength = 1000;
+    const reappear = new Track([
+        new Keyframe(0, -1000),
+        new Keyframe(pause, -1000),
+        new Keyframe(pause + reappearLength, 0)
+    ]);
+    cardYDeg = 0;
+    cardXDeg = 0;
+    cardZMove = 0;
+    cardXMove = 0;
+    cardAnimating = false;
+    let startTime = -1;
+    const step = (timestamp) => {
+        if (startTime == -1) {
+            startTime = timestamp;
+        } else {
+            const timePassed = timestamp - startTime;
+            if (timePassed > pause + reappearLength) {
+                sendable = true;
+                return;
+            }
+            cardYMove = reappear.getValue(timePassed);
+            applyCardTransforms();
+        }
+        requestAnimationFrame(step);
+    }
     requestAnimationFrame(step);
 }
 window.addEventListener("mousemove", (e) => {
@@ -179,6 +219,9 @@ window.addEventListener(
     true
 );
 document.querySelector("#send-button").addEventListener("click", (e) => {
+    if (!sendable) {
+        return;
+    }
     const writespace = document.querySelector("#writespace");
     const message = writespace.value;
     if (message.trim()) {
