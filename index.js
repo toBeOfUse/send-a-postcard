@@ -1,15 +1,26 @@
 import frontImages from "./covers/sources.js";
 import { Keyframe, Track } from "./animation.js";
-document.querySelector("#writespace")?.focus();
+
 let currentFrontImage = 0;
+const originalImages = frontImages.slice(0);
+const shuffledImages = [];
+while (shuffledImages.length < frontImages.length) {
+    const randomItem = Math.floor(Math.random() * originalImages.length);
+    shuffledImages.push(originalImages[randomItem]);
+    originalImages.splice(randomItem, 1);
+}
+
 function setFrontImage() {
-    const image = frontImages[currentFrontImage];
+    const image = shuffledImages[currentFrontImage];
     document.querySelector("#card-front").src = "covers/" + image.filename;
     document.querySelector("#image-desc").innerHTML = image.description;
     currentFrontImage += 1;
-    currentFrontImage %= frontImages.length;
+    currentFrontImage %= shuffledImages.length;
 }
+
 setFrontImage();
+document.querySelector("#writespace")?.focus();
+
 const ambientTiltRange = 30;
 const card = document.querySelector("#card-back");
 const cardFront = document.querySelector("#card-front");
