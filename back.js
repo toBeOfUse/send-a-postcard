@@ -1,8 +1,8 @@
 const http = require("http");
 const fs = require("fs");
 
-if (!fs.existsSync("index.txt")){
-    fs.writeFileSync("index.txt", "");
+if (!fs.existsSync("inbox.txt")){
+    fs.writeFileSync("inbox.txt", "");
 }
 
 http.createServer((req, res)=>{
