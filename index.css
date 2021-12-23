@@ -94,6 +94,7 @@ body {
     border-radius: 5px;
     width: 75px;
     padding: 3px;
+    background-color: white;
 }
 
 @media (max-width: 500px) {
