@@ -35,13 +35,15 @@ let ambientYDeg = 0;
 let sendable = true;
 function applyCardTransforms(extras) {
     card.style.transform =
+        "perspective(600px) " +
         (extras || "") +
-        `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px)` +
+        `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px) ` +
         `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
         `rotate3d(0, 1, 0, ${cardYDeg}deg) `;
     cardFront.style.transform =
+        "perspective(600px) " +
         (extras || "") +
-        `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px)` +
+        `translate3d(${cardXMove}px, ${cardYMove}px, ${cardZMove}px) ` +
         `rotate3d(1, 0, 0, ${cardXDeg}deg) ` +
         `rotate3d(0, 1, 0, ${cardYDeg + 180}deg)`;
 }
